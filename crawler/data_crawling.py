@@ -11,11 +11,57 @@ Original file is located at
 
 import requests
 from bs4 import BeautifulSoup
-
-# 레시피 하나만 크롤링
 import re
 
-def RecipeCrawler(recipeId):
+# 만개의 매거진 Main 레시피 id 크롤링
+def MainRecipeIdCrawler(pageId):
+    url = 'https://www.10000recipe.com/issue/view.html?cid=10000mag&page=' + pageId
+
+    response = requests.get(url)
+    html = response.text
+    soup = BeautifulSoup(html, 'html.parser')
+
+    main_recipe_id = [] # Main 레시피 id
+
+    # Main 레시피 id
+    elements = soup.select('#contents_area_full > div.chef_cont > div > div > a.thumbnail')
+    for element in elements:
+        id = re.sub(r'\D', '', element['href'])
+        main_recipe_id.append(id)
+
+    return(main_recipe_id)
+
+# 만개의 매거진 1페이지
+MainRecipeIdCrawler(str(1))
+
+# 만개의 매거진 Sub 레시피 id, 레시피 이름 크롤링
+def SubRecipeIdCrawler(main_recipe_id):
+
+    url = 'https://www.10000recipe.com/recipe/' + main_recipe_id
+
+    response = requests.get(url)
+    html = response.text
+    soup = BeautifulSoup(html, 'html.parser')
+
+    sub_recipe_id = [] # Sub 레시피 id
+    sub_recipe_name = [] # 레시피 이름
+
+    # Sub 레시피 id 및 이름
+    elements = soup.select('#contents_area > div > div.view_step_cont')
+    for element in elements:
+        id = re.sub(r'\D', '', element.find('a')['href'])
+        name = element.find('a').get_text().split()[0]
+        sub_recipe_id.append(id)
+        sub_recipe_name.append(name)
+
+    sub_recipe_all = [sub_recipe_id, sub_recipe_name]
+    return(sub_recipe_all)
+
+# 도시락에 빠질 수 없는 ✿유부초밥✿ 레시피 모음 (연어유부초밥, 크래미유부초밥, 명란마요유부초밥, 새우유부밥, 삼색유부초밥)
+SubRecipeIdCrawler(str(6988334))
+
+# 레시피 하나만 크롤링
+def RecipeCrawler(recipeId, name):
     url = 'https://www.10000recipe.com/recipe/' + recipeId
 
     response = requests.get(url)
@@ -37,7 +83,6 @@ def RecipeCrawler(recipeId):
     recipe_id.append(recipeId)
 
     # 레시피 이름
-    name = soup.select_one('#contents_area > div.view2_summary.st3 h3').get_text()
     recipe_name.append(name)
 
     # 레시피 썸네일
@@ -56,34 +101,32 @@ def RecipeCrawler(recipeId):
     recipe_composition.append('든든하게')
 
     # 레시피 재료
-    ingredients = soup.select_one('#divConfirmedMaterialArea > ul:nth-child(1)')
-    for tmp in ingredients.select('li'):
-        item = tmp.get_text().replace('구매', '')
-        item = re.sub(r'\s+', ' ', item.strip()) # 구매 링크 제외
-        recipe_ingredients.append('#' + item)
+    elements = soup.select_one('#divConfirmedMaterialArea > ul:nth-child(1)')
+    for element in elements.select('li'):
+        ingredient = re.sub(r'\s+', ' ', element.get_text().replace('구매', '').strip()) # 구매 링크 제외
+        recipe_ingredients.append('#' + ingredient)
     
     # 레시피 양념
-    seasoning = soup.select_one('#divConfirmedMaterialArea > ul:nth-child(2)')
-    for tmp in seasoning.select('li'):
-        item = tmp.get_text().replace('구매', '')
-        item = re.sub(r'\s+', ' ', item.strip())
-        recipe_seasoning.append('#' + item)
+    elements = soup.select_one('#divConfirmedMaterialArea > ul:nth-child(2)')
+    for element in elements.select('li'):
+        seasoning = re.sub(r'\s+', ' ', element.get_text().replace('구매', '').strip()) # 구매 링크 제외
+        recipe_seasoning.append('#' + seasoning)
 
     # 레시피 조리 순서 및 사진
-    orders_photo = soup.select_one('#contents_area > div:nth-child(16)')
-    steps = orders_photo.find_all('div', 'view_step_cont')
-    i = 0
-    for step in steps:
-        i = i + 1
-        order, material  = step.get_text().strip().split('.') # 조리 순서에서 주방 도구 제외
+    elements = soup.select_one('#contents_area > div:nth-child(16)')
+    elements = elements.find_all('div', 'view_step_cont')
+    for i, element in enumerate(elements, start=1):
+        order = element.find('div', 'media-body')
+        order = ''.join(order.findAll(string=True, recursive=False)).strip() # 조리 순서에서 설명, 주방 도구 제외
+        photo = element.find('img')['src']
         recipe_orders.append('#' + str(i) + '. ' + order)
-        recipe_photo.append('#' + step.find('img')['src'])
+        recipe_photo.append('#' + photo)
                                  
     recipe_all = [recipe_id, recipe_name, recipe_thumbnail, recipe_time, recipe_difficulty, recipe_composition, recipe_ingredients, recipe_seasoning, recipe_orders, recipe_photo]
     return(recipe_all)
 
 # 연어유부초밥
-RecipeCrawler(str(6909678))
+RecipeCrawler(str(6909678), '연어유부초밥')
 
-# 진미채볶음
-RecipeCrawler(str(6910583))
+# 크래미유부초밥
+RecipeCrawler(str(6916853), '크래미유부초밥')
