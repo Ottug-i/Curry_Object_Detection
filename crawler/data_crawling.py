@@ -61,9 +61,19 @@ def SubRecipeIdCrawler(main_recipe_id):
 SubRecipeIdCrawler(str(6988334))
 
 # 레시피 하나만 크롤링
-recipe_list = [] # 레시피 리스트
-
+recipe_id = [] # 레시피 id
+recipe_name = [] # 레시피 이름
+recipe_thumbnail = [] # 레시피 썸네일
+recipe_time = [] # 레시피 시간
+recipe_difficulty = [] # 레시피 난이도
+recipe_composition = [] # 레시피 구성
+recipe_ingredients = [] # 레시피 재료
+recipe_seasoning = [] # 레시피 양념
+recipe_orders = [] # 레시피 조리 순서
+recipe_photo = [] # 레시피 사진
+    
 def RecipeCrawler(recipeId):
+    
     url = 'https://www.10000recipe.com/recipe/' + recipeId
 
     response = requests.get(url)
@@ -71,23 +81,26 @@ def RecipeCrawler(recipeId):
     soup = BeautifulSoup(html, 'html.parser')
 
     # 레시피 id
-    id = recipeId
+    recipe_id.append(recipeId)
 
     # 레시피 이름
     name = soup.select_one('#relationGoods > div.best_tit')
-    name = name.get_text().split()[0]
+    recipe_name.append(name.get_text().split()[0])
 
     # 레시피 썸네일
     thumbnail = soup.select_one('#contents_area > div.view2_pic > div.centeredcrop img')['src']
+    recipe_thumbnail.append(thumbnail)
 
     # 레시피 시간
     time = soup.select_one('#contents_area > div.view2_summary.st3 > div.view2_summary_info > span.view2_summary_info2').get_text()
+    recipe_time.append(time)
 
     # 레시피 난이도
     difficulty = soup.select_one('#contents_area > div.view2_summary.st3 > div.view2_summary_info > span.view2_summary_info3').get_text()
+    recipe_difficulty.append(difficulty)
 
     # 레시피 구성 (정보 없음)
-    composition = '든든하게'
+    recipe_composition.append('든든하게')
 
     # 레시피 재료
     elements = soup.select_one('#divConfirmedMaterialArea > ul:nth-child(1)')
@@ -95,7 +108,7 @@ def RecipeCrawler(recipeId):
     for element in elements.select('li'):
         ingredient = re.sub(r'\s+', ' ', element.get_text().replace('구매', '').strip()) # 구매 링크 제외
         tmp = tmp + ('#' + ingredient)
-    ingredients = tmp
+    recipe_ingredients.append(tmp)
     
     # 레시피 양념
     try:
@@ -104,9 +117,9 @@ def RecipeCrawler(recipeId):
         for element in elements.select('li'):
             seasoning = re.sub(r'\s+', ' ', element.get_text().replace('구매', '').strip()) # 구매 링크 제외
             tmp = tmp + ('#' + seasoning)
-        seasoning = tmp
+        recipe_seasoning.append(tmp)
     except AttributeError:
-        seasoning = ''
+        recipe_seasoning.append('')
     else:
         pass
 
@@ -121,12 +134,8 @@ def RecipeCrawler(recipeId):
         tmp1 = tmp1 + ('#' + str(i) + '. ' + order)
         photo = element.find('img')['src']
         tmp2 = tmp2 + ('#' + photo)
-    orders = tmp1
-    photo = tmp2
-
-    recipe_list.append([id, name, thumbnail, time, difficulty, composition, ingredients, seasoning, orders, photo])
-                                     
-    return(recipe_list)
+    recipe_orders.append(tmp1)
+    recipe_photo.append(tmp2)
 
 # 연어유부초밥 (만개의 매거진의 레시피)
 RecipeCrawler(str(6909678))
@@ -136,3 +145,27 @@ RecipeCrawler(str(6916853))
 
 # 치즈케이크 (만개의 레시피의 레시피)
 RecipeCrawler(str(6992105))
+
+print(recipe_id)
+print(recipe_name)
+print(recipe_thumbnail)
+print(recipe_time)
+print(recipe_difficulty)
+print(recipe_composition)
+print(recipe_ingredients)
+print(recipe_seasoning)
+print(recipe_orders)
+print(recipe_photo)
+
+import pandas as pd
+
+# DataFrame으로 변환
+data = {'id': recipe_id, 'name': recipe_name, 'thumnail': recipe_thumbnail, 'time': recipe_time, 'difficulty': recipe_difficulty, 'composition': recipe_composition, 'ingredients': recipe_ingredients, 'seasoning': recipe_seasoning, 'orders': recipe_orders, 'photo': recipe_photo}
+recipe = pd.DataFrame(data)
+
+recipe.set_index('id', inplace = True)
+
+recipe
+
+# csv 파일 내보내기
+recipe.to_csv('recipe.csv', encoding='utf-8-sig')
