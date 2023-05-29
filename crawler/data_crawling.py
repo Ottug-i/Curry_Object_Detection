@@ -61,6 +61,8 @@ def SubRecipeIdCrawler(main_recipe_id):
 SubRecipeIdCrawler(str(6988334))
 
 # 레시피 하나만 크롤링
+recipe_list = [] # 레시피 리스트
+
 def RecipeCrawler(recipeId):
     url = 'https://www.10000recipe.com/recipe/' + recipeId
 
@@ -68,38 +70,24 @@ def RecipeCrawler(recipeId):
     html = response.text
     soup = BeautifulSoup(html, 'html.parser')
 
-    recipe_id = [] # 레시피 id
-    recipe_name = [] # 레시피 이름
-    recipe_thumbnail = [] # 레시피 썸네일
-    recipe_time = [] # 레시피 시간
-    recipe_difficulty = [] # 레시피 난이도
-    recipe_composition = [] # 레시피 구성
-    recipe_ingredients = [] # 레시피 재료
-    recipe_seasoning = [] # 레시피 양념
-    recipe_orders = [] # 레시피 조리 순서
-    recipe_photo = [] # 레시피 사진
-
     # 레시피 id
-    recipe_id.append(recipeId)
+    id = recipeId
 
     # 레시피 이름
     name = soup.select_one('#relationGoods > div.best_tit')
-    recipe_name.append(name.get_text().split()[0])
+    name = name.get_text().split()[0]
 
     # 레시피 썸네일
     thumbnail = soup.select_one('#contents_area > div.view2_pic > div.centeredcrop img')['src']
-    recipe_thumbnail.append(thumbnail)
 
     # 레시피 시간
     time = soup.select_one('#contents_area > div.view2_summary.st3 > div.view2_summary_info > span.view2_summary_info2').get_text()
-    recipe_time.append(time)
 
     # 레시피 난이도
     difficulty = soup.select_one('#contents_area > div.view2_summary.st3 > div.view2_summary_info > span.view2_summary_info3').get_text()
-    recipe_difficulty.append(difficulty)
 
     # 레시피 구성 (정보 없음)
-    recipe_composition.append('든든하게')
+    composition = '든든하게'
 
     # 레시피 재료
     elements = soup.select_one('#divConfirmedMaterialArea > ul:nth-child(1)')
@@ -107,7 +95,7 @@ def RecipeCrawler(recipeId):
     for element in elements.select('li'):
         ingredient = re.sub(r'\s+', ' ', element.get_text().replace('구매', '').strip()) # 구매 링크 제외
         tmp = tmp + ('#' + ingredient)
-    recipe_ingredients.append(tmp)
+    ingredients = tmp
     
     # 레시피 양념
     try:
@@ -116,9 +104,9 @@ def RecipeCrawler(recipeId):
         for element in elements.select('li'):
             seasoning = re.sub(r'\s+', ' ', element.get_text().replace('구매', '').strip()) # 구매 링크 제외
             tmp = tmp + ('#' + seasoning)
-        recipe_seasoning.append(tmp)
+        seasoning = tmp
     except AttributeError:
-        recipe_seasoning.append('')
+        seasoning = ''
     else:
         pass
 
@@ -133,12 +121,12 @@ def RecipeCrawler(recipeId):
         tmp1 = tmp1 + ('#' + str(i) + '. ' + order)
         photo = element.find('img')['src']
         tmp2 = tmp2 + ('#' + photo)
-    recipe_orders.append(tmp1)
-    recipe_photo.append(tmp2)
-                                 
-    recipe_all = [recipe_id, recipe_name, recipe_thumbnail, recipe_time, recipe_difficulty, recipe_composition, recipe_ingredients, recipe_seasoning, recipe_orders, recipe_photo]
-    
-    return(recipe_all)
+    orders = tmp1
+    photo = tmp2
+
+    recipe_list.append([id, name, thumbnail, time, difficulty, composition, ingredients, seasoning, orders, photo])
+                                     
+    return(recipe_list)
 
 # 연어유부초밥 (만개의 매거진의 레시피)
 RecipeCrawler(str(6909678))
