@@ -15,6 +15,10 @@ import re
 
 # 만개의 매거진 Main 레시피 id 크롤링
 def MainRecipeIdCrawler(pageId):
+
+    # for i in range(1, pageId + 1):
+    # url = f'https://www.10000recipe.com/issue/view.html?cid=10000mag&page={i}'
+
     url = 'https://www.10000recipe.com/issue/view.html?cid=10000mag&page=' + pageId
 
     response = requests.get(url)
@@ -99,16 +103,20 @@ def RecipeCrawler(recipeId):
 
     # 레시피 재료
     elements = soup.select_one('#divConfirmedMaterialArea > ul:nth-child(1)')
+    tmp = ''
     for element in elements.select('li'):
         ingredient = re.sub(r'\s+', ' ', element.get_text().replace('구매', '').strip()) # 구매 링크 제외
-        recipe_ingredients.append('#' + ingredient)
+        tmp = tmp + ('#' + ingredient)
+    recipe_ingredients.append(tmp)
     
     # 레시피 양념
     try:
         elements = soup.select_one('#divConfirmedMaterialArea > ul:nth-child(2)')
+        tmp = ''
         for element in elements.select('li'):
             seasoning = re.sub(r'\s+', ' ', element.get_text().replace('구매', '').strip()) # 구매 링크 제외
-            recipe_seasoning.append('#' + seasoning)
+            tmp = tmp + ('#' + seasoning)
+        recipe_seasoning.append(tmp)
     except AttributeError:
         recipe_seasoning.append('')
     else:
@@ -117,12 +125,16 @@ def RecipeCrawler(recipeId):
     # 레시피 조리 순서 및 사진
     elements = soup.select_one('#contents_area > div:nth-child(16)')
     elements = elements.find_all('div', 'view_step_cont')
+    tmp1 = ''
+    tmp2 = ''
     for i, element in enumerate(elements, start=1):
         order = element.find('div', 'media-body')
         order = ''.join(order.findAll(string=True, recursive=False)).strip() # 조리 순서에서 설명, 주방 도구 제외
+        tmp1 = tmp1 + ('#' + str(i) + '. ' + order)
         photo = element.find('img')['src']
-        recipe_orders.append('#' + str(i) + '. ' + order)
-        recipe_photo.append('#' + photo)
+        tmp2 = tmp2 + ('#' + photo)
+    recipe_orders.append(tmp1)
+    recipe_photo.append(tmp2)
                                  
     recipe_all = [recipe_id, recipe_name, recipe_thumbnail, recipe_time, recipe_difficulty, recipe_composition, recipe_ingredients, recipe_seasoning, recipe_orders, recipe_photo]
     
