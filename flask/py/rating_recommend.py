@@ -8,8 +8,6 @@ def find_favorite_genre_with_bookmark(user_id, bookmark_list):
 
   curry_recipes = pd.read_csv('./csv/curry_recipe_with_genres.csv', index_col = 'id')
 
-  print(bookmark_list)
-
   genre_count = {}
   for recipe_id in bookmark_list:
     genres = curry_recipes.loc[recipe_id, 'genres'].split('|')
