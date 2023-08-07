@@ -69,7 +69,7 @@ def get_rating_recommend():
 
     try:
         user_id, favorite_genre = find_favorite_genre_with_bookmark(user_id, bookmark_list)
-        result = recommend_with_ratings(user_id, favorite_genre, page)
+        result = favorite_genre, recommend_with_ratings(user_id, favorite_genre, page)
         return json.dumps(result), 200
     except Exception as e:
         return json.dumps({"error": str(e)}), 500
