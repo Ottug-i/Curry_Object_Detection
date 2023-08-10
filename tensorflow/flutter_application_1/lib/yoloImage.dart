@@ -75,7 +75,7 @@ class _YoloImageState extends State<YoloImage> {
   Future<void> loadYoloModel() async {
     await vision.loadYoloModel(
         labels:
-            'assets/coco.txt',
+            'assets/label.txt',
         modelPath:
             'assets/best-fp16.tflite',
         modelVersion: "yolov5",
@@ -111,6 +111,19 @@ class _YoloImageState extends State<YoloImage> {
         confThreshold: 0.4,
         classThreshold: 0.5);
     if (result.isNotEmpty) {
+
+
+      // 추론 결과에서 클래스 정보 추출 (중복 결과는 추가되지 않도록 코드 약간 수정 필요)
+      Set<String> detectedClasses = {};
+      for (var recognition in result!) {
+        detectedClasses.add(recognition["tag"]);
+      }
+
+      // 추론 결과 활용 (예: 클래스 정보 출력)
+      // -> 결과를 사용자에게 물어보고, 필요 없는 것을 삭제한 후 백엔드 서버에 요청
+      print("Detected Classes: $detectedClasses");
+
+
       setState(() {
         yoloResults = result;
       });
