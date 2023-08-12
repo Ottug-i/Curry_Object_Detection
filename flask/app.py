@@ -2,6 +2,7 @@ from flask import Flask, json, request
 from py.bookmark_recommend import recommend_with_bookmark
 from py.rating_recommend import find_user_ratings
 from py.rating_recommend import update_or_append_user_ratings
+from py.rating_recommend import delete_user_rating
 from py.rating_recommend import find_favorite_genre_with_bookmark
 from py.rating_recommend import recommend_with_ratings
 
@@ -55,6 +56,20 @@ def update_user_ratings():
     try:
         update_or_append_user_ratings(user_id, new_user_ratings_dic)
         return json.dumps({"message": "User ratings updated successfully."}), 200
+    except Exception as e:
+        return json.dumps({"error": str(e)}), 500
+    
+@app.route('/rating/user_ratings', methods=['DELETE'])
+def remove_user_ratings():
+    try:
+        user_id = int(request.args.get('user_id'))
+        recipe_id = int(request.args.get('recipe_id'))
+    except (TypeError, ValueError):
+        return json.dumps({"error": "Invalid parameters"}), 400
+
+    try:
+        delete_user_rating(user_id, recipe_id)
+        return json.dumps({"message": "User ratings deleted successfully."}), 200
     except Exception as e:
         return json.dumps({"error": str(e)}), 500
 
