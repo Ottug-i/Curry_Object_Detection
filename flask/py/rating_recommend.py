@@ -40,20 +40,39 @@ def update_or_append_user_ratings(user_id, new_user_ratings_dic):
       csv_reader = csv.DictReader(csvfile)
       existing_ratings = [row for row in csv_reader]
 
-  with open(file_path, 'w', newline='') as csvfile:
-    fieldnames = ['id', 'userId', 'rating']
-    csv_writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-    csv_writer.writeheader()
+    with open(file_path, 'w', newline='') as csvfile:
+      fieldnames = ['id', 'userId', 'rating']
+      csv_writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+      csv_writer.writeheader()
 
-    for rating in existing_ratings:
-      if (rating['userId'] == str(user_id)) and (rating['id']) in new_user_ratings_dic:
-        rating['rating'] = new_user_ratings_dic[rating['id']]
+      for rating in existing_ratings:
+        if (rating['userId'] == str(user_id)) and (rating['id']) in new_user_ratings_dic:
+          rating['rating'] = new_user_ratings_dic[rating['id']]
 
-      csv_writer.writerow(rating)
+        csv_writer.writerow(rating)
 
-    for key, val in new_user_ratings_dic.items():
-      if not any(rating['userId'] == str(user_id) and rating['id'] == key for rating in existing_ratings):
-        csv_writer.writerow({'id': key, 'userId': str(user_id), 'rating': val})
+      for key, val in new_user_ratings_dic.items():
+        if not any(rating['userId'] == str(user_id) and rating['id'] == key for rating in existing_ratings):
+          csv_writer.writerow({'id': key, 'userId': str(user_id), 'rating': val})
+
+def delete_user_rating(user_id, recipe_id):
+    
+    file_path = './csv/user_ratings.csv'
+    
+    file_exists = os.path.exists(file_path)
+    
+    if file_exists:
+        with open(file_path, 'r') as csvfile:
+          csv_reader = csv.DictReader(csvfile)
+          existing_ratings = [row for row in csv_reader]
+        
+        filtered_ratings = [row for row in existing_ratings if row['userId'] != str(user_id) or row['id'] != str(recipe_id)]
+
+        with open(file_path, 'w', newline='') as csvfile:
+          fieldnames = existing_ratings[0].keys()
+          csv_writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+          csv_writer.writeheader()
+          csv_writer.writerows(filtered_ratings)
 
 def recommend_with_ratings(user_id, favorite_genre, page):
 
