@@ -24,10 +24,7 @@ def get_bookmark_recommend():
         result = recommend_with_bookmark(recipe_id, page)
     except KeyError as e:
         return json.dumps({"error": "Recipe ID not found"}), 404
-
-    if result is None:
-        return json.dumps({"error": "No recommendations found"}), 404
-        
+    
     return json.dumps(result), 200
 
 @app.route('/rating/user_ratings', methods=['GET'])
@@ -41,7 +38,7 @@ def get_user_ratings():
     try:
         result = find_user_ratings(user_id, recipe_id)
     except KeyError as e:
-        return json.dumps({"error": "User rating not found for the given user_id and recipeId."}), 404
+        return json.dumps({"error": "User rating not found for the given user_id and recipe_id."}), 404
 
     return json.dumps(result), 200
 
@@ -54,10 +51,11 @@ def update_user_ratings():
         return json.dumps({"error": "Invalid parameters"}), 400
 
     try:
-        update_or_append_user_ratings(user_id, new_user_ratings_dic)
-        return json.dumps({"message": "User ratings updated successfully."}), 200
-    except Exception as e:
-        return json.dumps({"error": str(e)}), 500
+        result = update_or_append_user_ratings(user_id, new_user_ratings_dic)
+    except KeyError as e:
+        return json.dumps({"error": "User rating not found for the given user_id and recipe_id."}), 404
+    
+    return json.dumps(result), 200
     
 @app.route('/rating/user_ratings', methods=['DELETE'])
 def remove_user_ratings():
@@ -68,10 +66,11 @@ def remove_user_ratings():
         return json.dumps({"error": "Invalid parameters"}), 400
 
     try:
-        delete_user_rating(user_id, recipe_id)
-        return json.dumps({"message": "User ratings deleted successfully."}), 200
-    except Exception as e:
-        return json.dumps({"error": str(e)}), 500
+        result = delete_user_rating(user_id, recipe_id)
+    except KeyError as e:
+        return json.dumps({"error": "User rating not found for the given user_id and recipe_id."}), 404
+    
+    return json.dumps(result), 200
 
 @app.route('/rating/recommend', methods=['GET'])
 def get_rating_recommend():
@@ -85,9 +84,10 @@ def get_rating_recommend():
     try:
         user_id, favorite_genre = find_favorite_genre_with_bookmark(user_id, bookmark_list)
         result = favorite_genre, recommend_with_ratings(user_id, favorite_genre, page)
-        return json.dumps(result), 200
-    except Exception as e:
-        return json.dumps({"error": str(e)}), 500
+    except KeyError as e:
+        return json.dumps({"error": "User ID not found"}), 404
+    
+    return json.dumps(result), 200
 
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=5000)
