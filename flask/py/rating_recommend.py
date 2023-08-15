@@ -64,10 +64,9 @@ def update_or_append_user_ratings(user_id, new_user_ratings_dic):
                 csv_writer.writerow(rating)   
 
             for key, val in new_user_ratings_dic.items():
-                if (key in curry_recipes.index) and not any(rating['userId'] == str(user_id) and rating['id'] == key for rating in existing_ratings):
+                if (int(key) in curry_recipes.index) and not any(rating['userId'] == str(user_id) and rating['id'] == key for rating in existing_ratings):
                     csv_writer.writerow({'id': key, 'userId': str(user_id), 'rating': val})
                     updated = True
-            
             return updated
         
 def delete_user_rating(user_id, recipe_id):
