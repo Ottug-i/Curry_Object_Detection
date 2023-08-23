@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image/image.dart' as img;
+import 'package:camera/camera.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_vision/flutter_vision.dart';
 
@@ -18,6 +20,10 @@ class _YoloImageState extends State<YoloImage> {
   int imageHeight = 1;
   int imageWidth = 1;
   bool isLoaded = false;
+
+  late CameraController controller;
+  CameraImage? cameraImage;
+  bool isDetecting = false;
 
   @override
   void initState() {
@@ -74,10 +80,8 @@ class _YoloImageState extends State<YoloImage> {
 
   Future<void> loadYoloModel() async {
     await vision.loadYoloModel(
-        labels:
-            'assets/label.txt',
-        modelPath:
-            'assets/best-fp16.tflite',
+        labels: 'assets/label.txt',
+        modelPath: 'assets/best-1280.tflite',
         modelVersion: "yolov5",
         numThreads: 2,
         useGpu: true);
@@ -97,32 +101,40 @@ class _YoloImageState extends State<YoloImage> {
     }
   }
 
+  //
   yoloOnImage() async {
     yoloResults.clear();
     Uint8List byte = await imageFile!.readAsBytes();
-    final image = await decodeImageFromList(byte);
-    imageHeight = image.height;
-    imageWidth = image.width;
+    // final originalImage = await decodeImageFromList(byte);
+
+    img.Image? original = img.decodeImage(byte);
+
+    // 이미지 크기 변경
+    img.Image resized = img.copyResize(original!, width: 2560, height: 2560);
+    final newByte = Uint8List.fromList(img.encodePng(resized));
+    final resizedImage = await decodeImageFromList(newByte);
+
+    imageHeight = resizedImage.height;
+    imageWidth = resizedImage.width;
+
     final result = await vision.yoloOnImage(
-        bytesList: byte,
-        imageHeight: image.height,
-        imageWidth: image.width,
+        bytesList: newByte,
+        imageHeight: resizedImage.height,
+        imageWidth: resizedImage.width,
         iouThreshold: 0.8,
         confThreshold: 0.4,
-        classThreshold: 0.5);
+        classThreshold: 0.7);
+
     if (result.isNotEmpty) {
-
-
       // 추론 결과에서 클래스 정보 추출 (중복 결과는 추가되지 않도록 코드 약간 수정 필요)
       Set<String> detectedClasses = {};
-      for (var recognition in result!) {
+      for (var recognition in result) {
         detectedClasses.add(recognition["tag"]);
       }
 
       // 추론 결과 활용 (예: 클래스 정보 출력)
       // -> 결과를 사용자에게 물어보고, 필요 없는 것을 삭제한 후 백엔드 서버에 요청
       print("Detected Classes: $detectedClasses");
-
 
       setState(() {
         yoloResults = result;
