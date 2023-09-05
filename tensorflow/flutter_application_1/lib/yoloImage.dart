@@ -81,7 +81,7 @@ class _YoloImageState extends State<YoloImage> {
   Future<void> loadYoloModel() async {
     await vision.loadYoloModel(
         labels: 'assets/label.txt',
-        modelPath: 'assets/best-1280.tflite',
+        modelPath: 'assets/best-ver6.tflite',
         modelVersion: "yolov5",
         numThreads: 2,
         useGpu: true);
@@ -105,17 +105,17 @@ class _YoloImageState extends State<YoloImage> {
   yoloOnImage() async {
     yoloResults.clear();
     Uint8List byte = await imageFile!.readAsBytes();
-    // final originalImage = await decodeImageFromList(byte);
+    //inal originalImage = await decodeImageFromList(byte);
 
     img.Image? original = img.decodeImage(byte);
 
     // 이미지 크기 변경
-    img.Image resized = img.copyResize(original!, width: 2560, height: 2560);
+    img.Image resized = img.copyResize(original!, width: 1280, height: 1280);
     final newByte = Uint8List.fromList(img.encodePng(resized));
     final resizedImage = await decodeImageFromList(newByte);
 
-    imageHeight = resizedImage.height;
-    imageWidth = resizedImage.width;
+    imageHeight = original.height;
+    imageWidth = original.width;
 
     final result = await vision.yoloOnImage(
         bytesList: newByte,
@@ -145,15 +145,23 @@ class _YoloImageState extends State<YoloImage> {
   List<Widget> displayBoxesAroundRecognizedObjects(Size screen) {
     if (yoloResults.isEmpty) return [];
 
-    double factorX = screen.width / (imageWidth);
+    // double factorX = screen.width / (imageWidth);
+    // double imgRatio = imageWidth / imageHeight;
+    // double newWidth = imageWidth * factorX;
+    // double newHeight = newWidth / imgRatio;
+    // double factorY = newHeight / (imageHeight);
+
+    // double pady = (screen.height - newHeight) / 2;
+
+    double factorX = screen.width / 1280;
     double imgRatio = imageWidth / imageHeight;
-    double newWidth = imageWidth * factorX;
+    double newWidth = 1280 * factorX;
     double newHeight = newWidth / imgRatio;
-    double factorY = newHeight / (imageHeight);
+    double factorY = newHeight / 1280;
 
     double pady = (screen.height - newHeight) / 2;
 
-    Color colorPick = const Color.fromARGB(255, 50, 233, 30);
+    Color colorPick = Colors.pink; //const Color.fromARGB(255, 50, 233, 30);
 
     return yoloResults.map((result) {
       return Positioned(
