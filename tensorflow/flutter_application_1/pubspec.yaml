@@ -38,8 +38,6 @@ dependencies:
   get:
   image_picker: ^0.8.9
   image:
-  tflite_flutter:
-  tflite_flutter_helper:
   camera:
 
 dev_dependencies:
